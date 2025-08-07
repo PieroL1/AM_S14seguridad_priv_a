@@ -8,8 +8,18 @@ Esta evaluación técnica se basa en una aplicación Android que implementa un s
 ### 1.1 Identificación de Vulnerabilidades (2 puntos)
 Analiza el archivo `DataProtectionManager.kt` y responde:
 - ¿Qué método de encriptación se utiliza para proteger datos sensibles?
+
+    - **La aplicación utiliza la clase MasterKey de la librería Android Security Crypto, configurada con el esquema AES256_GCM.**
+    - **Los datos sensibles son almacenados en EncryptedSharedPreferences, lo que garantiza que tanto claves como valores estén cifrados en disco.**
+
 - Identifica al menos 2 posibles vulnerabilidades en la implementación actual del logging
+
+    1. **Los registros de accesos se almacenan en accessLogPrefs, que no está cifrado. Esto representa un riesgo de exposición de metadatos de seguridad, como fechas y patrones de uso.**
+    2. **La información registrada incluye fecha y hora exacta de cada acceso. Un atacante podría correlacionar dicha información para inferir comportamientos del usuario, incluso sin acceso a los datos cifrados.**
+
 - ¿Qué sucede si falla la inicialización del sistema de encriptación?
+
+La función initialize() está envuelta en un bloque try/catch. Si la inicialización de la encriptación falla, los objetos encryptedPrefs y accessLogPrefs no se instancian correctamente. Esto provocará una excepción del tipo UninitializedPropertyAccessException en posteriores llamadas, dejando la aplicación en un estado inconsistente. No existe un mecanismo de recuperación ni alerta clara al usuario.
 
 ### 1.2 Permisos y Manifiesto (2 puntos)
 Examina `AndroidManifest.xml` y `MainActivity.kt`:
