@@ -19,19 +19,49 @@ Analiza el archivo `DataProtectionManager.kt` y responde:
 
 - ¿Qué sucede si falla la inicialización del sistema de encriptación?
 
-La función initialize() está envuelta en un bloque try/catch. Si la inicialización de la encriptación falla, los objetos encryptedPrefs y accessLogPrefs no se instancian correctamente. Esto provocará una excepción del tipo UninitializedPropertyAccessException en posteriores llamadas, dejando la aplicación en un estado inconsistente. No existe un mecanismo de recuperación ni alerta clara al usuario.
+    La función initialize() está envuelta en un bloque try/catch. Si la inicialización de la encriptación falla, los objetos encryptedPrefs y accessLogPrefs no se instancian correctamente. Esto provocará una excepción del tipo UninitializedPropertyAccessException en posteriores llamadas, dejando la aplicación en un estado inconsistente. No existe un mecanismo de recuperación ni alerta clara al usuario.
 
 ### 1.2 Permisos y Manifiesto (2 puntos)
 Examina `AndroidManifest.xml` y `MainActivity.kt`:
-- Lista todos los permisos peligrosos declarados en el manifiesto
+**- Lista todos los permisos peligrosos declarados en el manifiesto**
+La aplicación solicita los siguientes permisos considerados peligrosos por Android:
+    - CAMERA
+    - READ_EXTERNAL_STORAGE
+    - READ_MEDIA_IMAGES
+    - RECORD_AUDIO
+    - READ_CONTACTS
+    - CALL_PHONE
+    - SEND_SMS
+    - ACCESS_COARSE_LOCATION
+
 - ¿Qué patrón se utiliza para solicitar permisos en runtime?
+
+    En MainActivity.kt se emplea el patrón basado en ActivityResultContracts.RequestPermission junto con ContextCompat.checkSelfPermission.
+    Este es el enfoque moderno recomendado por Jetpack, que permite una gestión centralizada de permisos y callbacks seguros.
+
 - Identifica qué configuración de seguridad previene backups automáticos
+
+    El archivo AndroidManifest.xml establece la propiedad:
+    android:allowBackup="false"
+    Esta configuración impide que los datos de la aplicación se incluyan en los backups automáticos de Android (Google Drive u otros), reduciendo el riesgo de fuga de información sensible.
 
 ### 1.3 Gestión de Archivos (3 puntos)
 Revisa `CameraActivity.kt` y `file_paths.xml`:
 - ¿Cómo se implementa la compartición segura de archivos de imágenes?
+
+    La aplicación utiliza un FileProvider para compartir archivos de imagen generando URIs seguras del tipo content://. Esto evita exponer rutas absolutas del sistema de archivos.
+
 - ¿Qué autoridad se utiliza para el FileProvider?
+
+    La autoridad está configurada en el manifiesto siguiendo la convención:
+    com.example.seguridad_priv_a.fileprovider
+    Esta autoridad vincula el FileProvider con los paths definidos en res/xml/file_paths.xml.
+
 - Explica por qué no se debe usar `file://` URIs directamente
+    
+    - Desde Android 7.0 (API 24), el uso de file:// URIs genera una excepción (FileUriExposedException).
+    - Las URIs basadas en rutas absolutas pueden filtrar información sensible sobre la estructura interna del sistema de archivos.
+    - A diferencia de file://, las URIs content:// permiten aplicar permisos temporales y específicos por archivo, lo que incrementa la seguridad al compartir datos entre aplicaciones.
 
 ## Parte 2: Implementación y Mejoras Intermedias (8-14 puntos)
 
